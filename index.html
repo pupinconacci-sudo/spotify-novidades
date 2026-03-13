@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spotify · Novidades da Semana</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1DB954;
+    --black: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0f0ee;
+    --muted: #888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(29,185,84,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(29,185,84,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+  .header { display: flex; align-items: center; gap: 16px; margin-bottom: 48px; }
+  .logo-mark { width: 44px; height: 44px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo-mark svg { width: 24px; height: 24px; fill: #000; }
+  .header-text h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-text p { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 0.05em; }
+  #user-bar { display: none; align-items: center; gap: 12px; padding: 10px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; margin-bottom: 32px; }
+  #user-bar.visible { display: flex; }
+  .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface2); overflow: hidden; flex-shrink: 0; }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .user-name { font-size: 13px; font-weight: 700; flex: 1; }
+  .user-badge { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--green); letter-spacing: 0.05em; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px 32px; }
+  .section { margin-bottom: 36px; }
+  .section-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 12px; }
+  #login-section { text-align: center; padding: 60px 32px; }
+  #login-section h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; }
+  #login-section p { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); line-height: 1.8; margin-bottom: 32px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 26px; border-radius: 100px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-green:hover:not(:disabled) { background: #1ed760; transform: scale(1.02); }
+  .btn-green:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: rgba(255,255,255,0.2); background: var(--surface2); }
+  .btn-sm { padding: 9px 18px; font-size: 12px; }
+  .field-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 8px; letter-spacing: 0.05em; }
+  .days-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .day-chip { padding: 6px 14px; border-radius: 100px; font-family: 'DM Mono', monospace; font-size: 11px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; background: transparent; color: var(--muted); }
+  .day-chip.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 500; }
+  .markets-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .market-chip { display: flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; background: transparent; color: var(--muted); user-select: none; }
+  .market-chip:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .market-chip.active { background: rgba(29,185,84,0.1); border-color: rgba(29,185,84,0.35); color: #1ed760; }
+  .market-chip .flag { font-size: 15px; line-height: 1; }
+  .market-chip .chk { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; transition: all 0.15s; }
+  .market-chip.active .chk { background: var(--green); border-color: var(--green); color: #000; }
+  .source-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .source-chip { display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-family: 'DM Mono', monospace; font-size: 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; background: transparent; color: var(--muted); user-select: none; }
+  .source-chip:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .source-chip.active { background: rgba(29,185,84,0.1); border-color: rgba(29,185,84,0.35); color: #1ed760; }
+  .source-chip input[type=checkbox] { display: none; }
+  .source-chip .chk-box { width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+  .source-chip.active .chk-box { background: var(--green); border-color: var(--green); color: #000; }
+  .source-chip .src-icon { font-size: 14px; line-height: 1; }
+  .genres-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .genre-chip { padding: 5px 12px; border-radius: 100px; font-family: 'DM Mono', monospace; font-size: 11px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; background: transparent; color: var(--muted); }
+  .genre-chip.active { background: rgba(29,185,84,0.1); border-color: rgba(29,185,84,0.35); color: #1ed760; }
+  input[type="text"] { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); outline: none; transition: border-color 0.2s; margin-bottom: 24px; }
+  input[type="text"]:focus { border-color: rgba(29,185,84,0.4); }
+  #progress-wrap { display: none; margin: 20px 0; }
+  #progress-wrap.visible { display: block; }
+  .progress-bar-bg { height: 3px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+  .progress-bar-fill { height: 100%; background: var(--green); border-radius: 3px; width: 0%; transition: width 0.4s; }
+  .progress-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  #results-section { display: none; }
+  #results-section.visible { display: block; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  .results-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .results-count span { color: var(--green); font-weight: 500; }
+  .table-wrap { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--surface2); }
+  thead th { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; padding: 14px 16px; text-align: left; font-weight: 400; }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 12px 16px; font-size: 13px; vertical-align: middle; }
+  .td-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); width: 36px; }
+  .td-cover { width: 44px; padding: 8px 6px 8px 16px !important; }
+  .td-cover img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; display: block; }
+  .td-cover .no-cover { width: 36px; height: 36px; border-radius: 6px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .track-name { font-weight: 700; font-size: 13px; }
+  .track-album { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .artist-name { font-size: 13px; }
+  .release-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .td-link a { color: var(--green); text-decoration: none; font-size: 16px; opacity: 0.6; transition: opacity 0.15s; }
+  .td-link a:hover { opacity: 1; }
+  #playlist-banner { display: none; margin-top: 20px; background: rgba(29,185,84,0.08); border: 1px solid rgba(29,185,84,0.2); border-radius: 16px; padding: 20px 24px; align-items: center; gap: 16px; }
+  #playlist-banner.visible { display: flex; }
+  #playlist-banner .bi { font-size: 26px; flex-shrink: 0; }
+  #playlist-banner .bt { flex: 1; }
+  #playlist-banner .bt strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  #playlist-banner .bt span { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 11px 22px; font-size: 12px; font-family: 'DM Mono', monospace; opacity: 0; transition: all 0.3s; z-index: 100; white-space: nowrap; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.success { border-color: rgba(29,185,84,0.4); color: var(--green); }
+  #toast.error { border-color: rgba(255,80,80,0.3); color: #ff6b6b; }
+  @media (max-width: 600px) { .container { padding: 28px 14px 60px; } .card { padding: 18px; } thead th:nth-child(5), tbody td:nth-child(5) { display: none; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Novidades da Semana</h1>
+      <p>SPOTIFY · LANÇAMENTOS RECENTES</p>
+    </div>
+  </div>
+
+  <div id="user-bar">
+    <div class="user-avatar"><img id="user-img" src="" alt=""></div>
+    <div class="user-name" id="user-name">—</div>
+    <div class="user-badge">CONECTADO</div>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Sair</button>
+  </div>
+
+  <div id="login-section" class="card">
+    <h2>Conecte sua conta</h2>
+    <p>Faça login com o Spotify para buscar lançamentos<br>dos últimos dias e criar playlists automaticamente.</p>
+    <button class="btn btn-green" onclick="login()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      Entrar com Spotify
+    </button>
+  </div>
+
+  <div id="app-section" style="display:none">
+    <div class="section">
+      <div class="section-label">Configurar busca</div>
+      <div class="card">
+
+        <div class="field-label">LANÇAMENTOS DOS ÚLTIMOS</div>
+        <div class="days-row">
+          <button class="day-chip" data-days="1" onclick="selectDays(this)">1 dia</button>
+          <button class="day-chip active" data-days="5" onclick="selectDays(this)">5 dias</button>
+          <button class="day-chip" data-days="7" onclick="selectDays(this)">7 dias</button>
+          <button class="day-chip" data-days="14" onclick="selectDays(this)">14 dias</button>
+          <button class="day-chip" data-days="30" onclick="selectDays(this)">30 dias</button>
+        </div>
+
+        <div class="field-label">MERCADOS (selecione um ou mais)</div>
+        <div class="markets-grid">
+          <div class="market-chip active" data-market="BR" onclick="toggleMarket(this)"><span class="flag">🇧🇷</span><span>Brasil</span><span class="chk">✓</span></div>
+          <div class="market-chip" data-market="US" onclick="toggleMarket(this)"><span class="flag">🇺🇸</span><span>EUA</span><span class="chk"></span></div>
+          <div class="market-chip" data-market="GB" onclick="toggleMarket(this)"><span class="flag">🇬🇧</span><span>UK</span><span class="chk"></span></div>
+          <div class="market-chip" data-market="PT" onclick="toggleMarket(this)"><span class="flag">🇵🇹</span><span>Portugal</span><span class="chk"></span></div>
+          <div class="market-chip" data-market="AR" onclick="toggleMarket(this)"><span class="flag">🇦🇷</span><span>Argentina</span><span class="chk"></span></div>
+          <div class="market-chip" data-market="MX" onclick="toggleMarket(this)"><span class="flag">🇲🇽</span><span>México</span><span class="chk"></span></div>
+          <div class="market-chip" data-market="FR" onclick="toggleMarket(this)"><span class="flag">🇫🇷</span><span>França</span><span class="chk"></span></div>
+          <div class="market-chip" data-market="DE" onclick="toggleMarket(this)"><span class="flag">🇩🇪</span><span>Alemanha</span><span class="chk"></span></div>
+          <div class="market-chip" data-market="JP" onclick="toggleMarket(this)"><span class="flag">🇯🇵</span><span>Japão</span><span class="chk"></span></div>
+        </div>
+
+        <div class="field-label">FONTES DE BUSCA</div>
+        <div class="source-chips">
+          <div class="source-chip" id="src-general" onclick="toggleSource(this)">
+            <span class="src-icon">🌍</span><span>Lançamentos gerais</span><span class="chk-box"></span>
+          </div>
+          <div class="source-chip active" id="src-followed" onclick="toggleSource(this)">
+            <span class="src-icon">❤️</span><span>Artistas que sigo</span><span class="chk-box">✓</span>
+          </div>
+          <div class="source-chip" id="src-related" onclick="toggleSource(this)">
+            <span class="src-icon">✨</span><span>Artistas relacionados</span><span class="chk-box"></span>
+          </div>
+          <div class="source-chip" id="src-top" onclick="toggleSource(this)">
+            <span class="src-icon">⭐</span><span>Meus top artistas</span><span class="chk-box"></span>
+          </div>
+          <div class="source-chip" id="src-recent" onclick="toggleSource(this)">
+            <span class="src-icon">🕐</span><span>Ouvidos recentemente</span><span class="chk-box"></span>
+          </div>
+        </div>
+
+        <div class="field-label">GÊNERO (opcional)</div>
+        <div class="genres-row">
+          <button class="genre-chip active" data-genre="" onclick="toggleGenre(this)">Todos</button>
+          <button class="genre-chip" data-genre="pop" onclick="toggleGenre(this)">Pop</button>
+          <button class="genre-chip" data-genre="rock" onclick="toggleGenre(this)">Rock</button>
+          <button class="genre-chip" data-genre="hip-hop" onclick="toggleGenre(this)">Hip-Hop</button>
+          <button class="genre-chip" data-genre="r%26b" onclick="toggleGenre(this)">R&amp;B</button>
+          <button class="genre-chip" data-genre="electronic" onclick="toggleGenre(this)">Electronic</button>
+          <button class="genre-chip" data-genre="sertanejo" onclick="toggleGenre(this)">Sertanejo</button>
+          <button class="genre-chip" data-genre="funk" onclick="toggleGenre(this)">Funk</button>
+          <button class="genre-chip" data-genre="pagode" onclick="toggleGenre(this)">Pagode</button>
+          <button class="genre-chip" data-genre="forro" onclick="toggleGenre(this)">Forró</button>
+          <button class="genre-chip" data-genre="latin" onclick="toggleGenre(this)">Latin</button>
+          <button class="genre-chip" data-genre="indie" onclick="toggleGenre(this)">Indie</button>
+        </div>
+
+        <div class="field-label">NOME DA PLAYLIST (OPCIONAL)</div>
+        <input type="text" id="playlist-name" placeholder="Ex: Pop Brasil — Março 2026">
+
+        <button class="btn btn-green" onclick="searchReleases()" id="search-btn">Buscar lançamentos</button>
+      </div>
+    </div>
+
+    <div id="progress-wrap">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+      <div class="progress-text" id="progress-text">Buscando...</div>
+    </div>
+
+    <div id="results-section">
+      <div class="results-header">
+        <div class="results-count"><span id="results-num">0</span> faixas encontradas</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="searchReleases()">↻ Atualizar</button>
+          <button class="btn btn-green btn-sm" onclick="createPlaylist()" id="create-btn">+ Criar playlist</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th></th><th>Música</th><th>Artista</th><th>Lançamento</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tracks-tbody"></tbody>
+        </table>
+      </div>
+      <div id="playlist-banner">
+        <div class="bi">🎉</div>
+        <div class="bt">
+          <strong id="banner-title">Playlist criada!</strong>
+          <span id="banner-sub"></span>
+        </div>
+        <a id="banner-link" href="#" target="_blank" class="btn btn-green btn-sm">Abrir ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const CLIENT_ID = '505c36e253084c6db29a7592f6fffe11';
+const REDIRECT_URI = 'https://pupinconacci-sudo.github.io/spotify-novidades/callback.html';
+const SCOPES = 'user-read-private user-read-email playlist-modify-public playlist-modify-private user-follow-read user-top-read user-read-recently-played';
+
+let accessToken = null;
+let selectedDays = 5;
+let selectedGenre = '';
+let allTracks = [];
+let currentUserId = null;
+
+// PKCE
+function rnd(n){const a=new Uint8Array(n);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');}
+async function sha256(s){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));}
+function b64url(b){return btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+
+async function login(){
+  const v=rnd(32),c=b64url(await sha256(v)),s=rnd(8);
+  sessionStorage.setItem('pkce_v',v); sessionStorage.setItem('pkce_s',s);
+  const p=new URLSearchParams({response_type:'code',client_id:CLIENT_ID,redirect_uri:REDIRECT_URI,state:s,code_challenge_method:'S256',code_challenge:c});
+  window.location.href='https://accounts.spotify.com/authorize?'+p+'&scope='+encodeURIComponent(SCOPES);
+}
+
+async function handleCallback(){
+  const p=new URLSearchParams(window.location.search);
+  const code=p.get('code');
+  if(!code)return false;
+  if(p.get('state')!==sessionStorage.getItem('pkce_s')){showToast('Erro de estado OAuth','error');return false;}
+  const res=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIRECT_URI,client_id:CLIENT_ID,code_verifier:sessionStorage.getItem('pkce_v')})});
+  const d=await res.json();
+  if(d.access_token){
+    accessToken=d.access_token;
+    sessionStorage.setItem('sp_tok',accessToken);
+    sessionStorage.setItem('sp_exp',Date.now()+d.expires_in*1000);
+    window.history.replaceState({},'',window.location.pathname);
+    return true;
+  }
+  showToast('Falha na autenticação','error');
+  return false;
+}
+
+function logout(){
+  sessionStorage.clear();accessToken=null;
+  document.getElementById('login-section').style.display='block';
+  document.getElementById('app-section').style.display='none';
+  document.getElementById('user-bar').classList.remove('visible');
+}
+
+async function apiFetch(url, silent404=false){
+  console.log('[GET]', url);
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  console.log('[STATUS]', res.status, url);
+  if(res.status===401){logout();showToast('Sessão expirada','error');return null;}
+  if(res.status===404&&silent404) return null;
+  if(!res.ok){
+    const txt=await res.text();
+    console.error('[ERROR]', res.status, txt);
+    return null;
+  }
+  const json=await res.json();
+  console.log('[RESPONSE]', json);
+  return json;
+}
+
+async function loadUser(){
+  const me=await apiFetch('https://api.spotify.com/v1/me');
+  if(!me)return;
+  currentUserId=me.id;
+  document.getElementById('user-name').textContent=me.display_name||me.id;
+  if(me.images?.[0])document.getElementById('user-img').src=me.images[0].url;
+  document.getElementById('user-bar').classList.add('visible');
+}
+
+function selectDays(el){
+  document.querySelectorAll('.day-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  selectedDays=parseInt(el.dataset.days);
+}
+
+function toggleMarket(el){
+  const active=document.querySelectorAll('.market-chip.active');
+  if(el.classList.contains('active')&&active.length===1){showToast('Selecione ao menos um mercado','error');return;}
+  el.classList.toggle('active');
+  el.querySelector('.chk').textContent=el.classList.contains('active')?'✓':'';
+}
+
+function toggleGenre(el){
+  document.querySelectorAll('.genre-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  selectedGenre=el.dataset.genre;
+}
+
+function getMarkets(){return[...document.querySelectorAll('.market-chip.active')].map(e=>e.dataset.market);}
+
+function toggleSource(el){
+  // at least one must remain active
+  const active=document.querySelectorAll('.source-chip.active');
+  if(el.classList.contains('active')&&active.length===1){showToast('Selecione ao menos uma fonte','error');return;}
+  el.classList.toggle('active');
+  el.querySelector('.chk-box').textContent=el.classList.contains('active')?'✓':'';
+}
+
+function getSources(){
+  return {
+    general: document.getElementById('src-general').classList.contains('active'),
+    followed: document.getElementById('src-followed').classList.contains('active'),
+    related: document.getElementById('src-related').classList.contains('active'),
+    top: document.getElementById('src-top').classList.contains('active'),
+    recent: document.getElementById('src-recent').classList.contains('active'),
+  };
+}
+
+async function fetchTopArtists(){
+  // short_term = ~4 weeks, medium_term = ~6 months, long_term = all time
+  const data=await apiFetch('https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term');
+  if(!data?.items?.length) return [];
+  console.log('[TOP ARTISTS]', data.items.length, 'artists');
+  return data.items;
+}
+
+async function fetchRecentArtists(){
+  // recently-played returns tracks, we extract unique artists from them
+  const data=await apiFetch('https://api.spotify.com/v1/me/player/recently-played?limit=50');
+  if(!data?.items?.length) return [];
+  const seen=new Set();
+  const artists=[];
+  for(const item of data.items){
+    for(const artist of item.track.artists){
+      if(seen.has(artist.id)) continue;
+      seen.add(artist.id);
+      artists.push(artist);
+    }
+  }
+  console.log('[RECENT ARTISTS]', artists.length, 'unique artists from recent plays');
+  return artists;
+}
+
+async function fetchAllFollowedArtists(){
+  let artists=[], after=null;
+  while(true){
+    const url='https://api.spotify.com/v1/me/following?type=artist&limit=50'+(after?'&after='+after:'');
+    const data=await apiFetch(url);
+    if(!data?.artists?.items?.length) break;
+    artists=artists.concat(data.artists.items);
+    after=data.artists.cursors?.after;
+    if(!after||artists.length>=500) break;
+  }
+  console.log('[FOLLOWED] total artists:', artists.length);
+  return artists;
+}
+
+async function fetchArtistReleases(artistId, artistName, cutoff, market, seen, includeFeats=false){
+  const results=[];
+
+  // Main releases (albums + singles where artist is primary)
+  const data=await apiFetch(`https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single,appears_on&market=${market}&limit=50`);
+  if(!data?.items) return results;
+
+  for(const album of data.items){
+    if(!album.release_date||album.release_date<cutoff) continue;
+    if(seen.has(album.id)) continue;
+    seen.add(album.id);
+
+    const td=await apiFetch(`https://api.spotify.com/v1/albums/${album.id}/tracks?limit=50&market=${market}`);
+    if(!td?.items) continue;
+
+    for(const track of td.items){
+      // For appears_on albums, only include tracks where the artist actually participates
+      const artistIds=track.artists.map(a=>a.id);
+      if(album.album_group==='appears_on' && !artistIds.includes(artistId)) continue;
+      if(seen.has(track.id)) continue;
+      seen.add(track.id);
+
+      const isFeat = album.album_group==='appears_on' && track.artists[0]?.id !== artistId;
+      results.push({
+        id:track.id, uri:track.uri,
+        name:track.name,
+        artists:track.artists.map(a=>a.name).join(', '),
+        album:album.name,
+        cover:album.images?.[1]?.url||album.images?.[0]?.url||null,
+        releaseDate:album.release_date,
+        url:track.external_urls.spotify,
+        market,
+        isFeat
+      });
+    }
+  }
+  return results;
+}
+
+function getCutoff(days){
+  const d=new Date();d.setDate(d.getDate()-days);
+  return d.toISOString().split('T')[0];
+}
+
+async function searchReleases(){
+  const markets=getMarkets();
+  const sources=getSources();
+  if(!markets.length){showToast('Selecione ao menos um mercado','error');return;}
+  setProgress(5,'Iniciando busca...');
+  showProgress(true);
+  document.getElementById('results-section').classList.remove('visible');
+  document.getElementById('playlist-banner').classList.remove('visible');
+  document.getElementById('search-btn').disabled=true;
+  allTracks=[];
+
+  const cutoff=getCutoff(selectedDays);
+  const seen=new Set();
+  const market=markets[0]; // primary market for artist lookups
+
+  try{
+    // ── Build artist pool ───────────────────────────────────
+    if(sources.followed||sources.related||sources.top||sources.recent){
+      let artistPool=[];
+      const poolSeen=new Set();
+
+      const addToPool=(list)=>{
+        for(const a of list){
+          if(!a?.id||poolSeen.has(a.id)) continue;
+          poolSeen.add(a.id);
+          artistPool.push(a);
+        }
+      };
+
+      if(sources.followed){
+        setProgress(8,'Buscando artistas que você segue...');
+        addToPool(await fetchAllFollowedArtists());
+      }
+      if(sources.top){
+        setProgress(12,'Buscando seus top artistas...');
+        addToPool(await fetchTopArtists());
+      }
+      if(sources.recent){
+        setProgress(16,'Buscando artistas ouvidos recentemente...');
+        addToPool(await fetchRecentArtists());
+      }
+      if(sources.related && artistPool.length){
+        setProgress(20,'Buscando artistas relacionados...');
+        const sample=artistPool.slice(0,10);
+        for(const artist of sample){
+          const rel=await apiFetch(`https://api.spotify.com/v1/artists/${artist.id}/related-artists`, true);
+          if(rel?.artists) addToPool(rel.artists);
+        }
+      }
+
+      console.log('[POOL] total artists:', artistPool.length);
+
+      // fetch releases for each artist
+      for(let i=0;i<artistPool.length;i++){
+        const artist=artistPool[i];
+        setProgress(20+((i/artistPool.length)*50),`Verificando ${artist.name}... (${allTracks.length} faixas)`);
+        const tracks=await fetchArtistReleases(artist.id, artist.name, cutoff, market, seen, true);
+        allTracks=allTracks.concat(tracks);
+      }
+    }
+
+    // ── SOURCE 3: General new releases ─────────────────────
+    if(sources.general){
+      for(let mi=0;mi<markets.length;mi++){
+        const mkt=markets[mi];
+        const pct=70+(mi/markets.length)*25;
+        setProgress(pct,`Buscando lançamentos gerais em ${mkt}... (${allTracks.length} faixas)`);
+
+        // new-releases endpoint
+        const nr=await apiFetch(`https://api.spotify.com/v1/browse/new-releases?country=${mkt}&limit=50`);
+        if(nr?.albums?.items){
+          for(const album of nr.albums.items){
+            if(!album.release_date||album.release_date<cutoff) continue;
+            if(seen.has(album.id)) continue;
+            seen.add(album.id);
+            const td=await apiFetch(`https://api.spotify.com/v1/albums/${album.id}/tracks?limit=50&market=${mkt}`);
+            if(!td?.items) continue;
+            for(const track of td.items){
+              if(seen.has(track.id)) continue;
+              seen.add(track.id);
+              allTracks.push({id:track.id,uri:track.uri,name:track.name,artists:track.artists.map(a=>a.name).join(', '),album:album.name,cover:album.images?.[1]?.url||album.images?.[0]?.url||null,releaseDate:album.release_date,url:track.external_urls.spotify,market:mkt});
+            }
+          }
+        }
+
+        // broad keyword search as supplement
+        const queries=selectedGenre?[selectedGenre]:['a','e','the','de'];
+        for(const q of queries){
+          let offset=0;
+          while(offset<100){
+            const data=await apiFetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=album&market=${mkt}&limit=50&offset=${offset}`);
+            if(!data?.albums?.items?.length) break;
+            let anyInRange=false;
+            for(const album of data.albums.items){
+              if(!album.release_date||album.release_date<cutoff) continue;
+              anyInRange=true;
+              if(seen.has(album.id)) continue;
+              seen.add(album.id);
+              const td=await apiFetch(`https://api.spotify.com/v1/albums/${album.id}/tracks?limit=50&market=${mkt}`);
+              if(!td?.items) continue;
+              for(const track of td.items){
+                if(seen.has(track.id)) continue;
+                seen.add(track.id);
+                allTracks.push({id:track.id,uri:track.uri,name:track.name,artists:track.artists.map(a=>a.name).join(', '),album:album.name,cover:album.images?.[1]?.url||album.images?.[0]?.url||null,releaseDate:album.release_date,url:track.external_urls.spotify,market:mkt});
+              }
+              setProgress(pct,`Buscando em ${mkt}... (${allTracks.length} faixas)`);
+            }
+            offset+=50;
+            if(!anyInRange&&offset>50) break;
+          }
+        }
+      }
+    }
+
+    allTracks.sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
+    setProgress(100,`${allTracks.length} faixas encontradas`);
+    renderTable(allTracks);
+    setTimeout(()=>showProgress(false),600);
+  }catch(e){
+    console.error(e);
+    showToast('Erro ao buscar lançamentos','error');
+    showProgress(false);
+  }
+  document.getElementById('search-btn').disabled=false;
+}
+
+function renderTable(tracks){
+  document.getElementById('results-num').textContent=tracks.length;
+  const tbody=document.getElementById('tracks-tbody');
+  if(!tracks.length){
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:40px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">Nenhum lançamento encontrado para esse período.</td></tr>`;
+    document.getElementById('results-section').classList.add('visible');
+    return;
+  }
+  tbody.innerHTML=tracks.map((t,i)=>`
+    <tr>
+      <td class="td-num">${i+1}</td>
+      <td class="td-cover">${t.cover?`<img src="${t.cover}" loading="lazy" alt="">`:`<div class="no-cover">♪</div>`}</td>
+      <td><div class="track-name">${esc(t.name)}${t.isFeat?` <span style="font-size:10px;background:rgba(29,185,84,0.15);color:#1ed760;border-radius:4px;padding:1px 6px;font-family:'DM Mono',monospace;font-weight:400">feat</span>`:''}</div><div class="track-album">${esc(t.album)}</div></td>
+      <td><div class="artist-name">${esc(t.artists)}</div></td>
+      <td><div class="release-date">${fmtDate(t.releaseDate)}</div></td>
+      <td class="td-link"><a href="${t.url}" target="_blank">↗</a></td>
+    </tr>`).join('');
+  document.getElementById('results-section').classList.add('visible');
+}
+
+async function createPlaylist(){
+  if(!allTracks.length)return;
+  const btn=document.getElementById('create-btn');
+  btn.textContent='Criando...';btn.disabled=true;
+  const markets=getMarkets().join('+');
+  const defaultName=`Novidades ${markets} · ${new Date().toLocaleDateString('pt-BR')}`;
+  const name=document.getElementById('playlist-name').value.trim()||defaultName;
+  try{
+    const plRes=await fetch(`https://api.spotify.com/v1/users/${currentUserId}/playlists`,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name,description:`Lançamentos dos últimos ${selectedDays} dias — gerado automaticamente`,public:true})});
+    const pl=await plRes.json();
+    if(!pl.id)throw new Error();
+    const uris=allTracks.map(t=>t.uri);
+    for(let i=0;i<uris.length;i+=100){
+      await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/tracks`,{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({uris:uris.slice(i,i+100)})});
+    }
+    document.getElementById('banner-title').textContent=`"${name}" criada!`;
+    document.getElementById('banner-sub').textContent=`${uris.length} músicas adicionadas`;
+    document.getElementById('banner-link').href=pl.external_urls.spotify;
+    document.getElementById('playlist-banner').classList.add('visible');
+    showToast('Playlist criada! 🎉','success');
+  }catch(e){showToast('Erro ao criar playlist','error');}
+  btn.textContent='+ Criar playlist';btn.disabled=false;
+}
+
+function setProgress(p,t){document.getElementById('progress-fill').style.width=p+'%';document.getElementById('progress-text').textContent=t;}
+function showProgress(v){document.getElementById('progress-wrap').classList.toggle('visible',v);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return day?`${day}/${m}/${y}`:m?`${m}/${y}`:y;}
+let _tt;
+function showToast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='show '+type;clearTimeout(_tt);_tt=setTimeout(()=>el.className='',3000);}
+
+async function init(){
+  if(window.location.search.includes('code=')){
+    const ok=await handleCallback();
+    if(ok){
+      document.getElementById('login-section').style.display='none';
+      document.getElementById('app-section').style.display='block';
+      await loadUser();
+      return;
+    }
+  }
+  const tok=sessionStorage.getItem('sp_tok');
+  const exp=sessionStorage.getItem('sp_exp');
+  if(tok&&exp&&Date.now()<parseInt(exp)){
+    accessToken=tok;
+    document.getElementById('login-section').style.display='none';
+    document.getElementById('app-section').style.display='block';
+    await loadUser();
+  }
+}
+init();
+</script>
+</body>
+</html>
