@@ -261,7 +261,7 @@
 
 <script>
 const CLIENT_ID = '505c36e253084c6db29a7592f6fffe11';
-const REDIRECT_URI = 'http://127.0.0.1:8888/callback';
+const REDIRECT_URI = 'https://pupinconacci-sudo.github.io/spotify-novidades/callback';
 const SCOPES = 'user-read-private user-read-email playlist-modify-public playlist-modify-private user-follow-read';
 
 let accessToken = null;
@@ -307,11 +307,12 @@ function logout(){
   document.getElementById('user-bar').classList.remove('visible');
 }
 
-async function apiFetch(url){
+async function apiFetch(url, silent404=false){
   console.log('[GET]', url);
   const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
   console.log('[STATUS]', res.status, url);
   if(res.status===401){logout();showToast('Sessão expirada','error');return null;}
+  if(res.status===404&&silent404) return null;
   if(!res.ok){
     const txt=await res.text();
     console.error('[ERROR]', res.status, txt);
@@ -454,7 +455,7 @@ async function searchReleases(){
         setProgress(20,'Buscando artistas relacionados...');
         const sample=followed.slice(0,10);
         for(const artist of sample){
-          const rel=await apiFetch(`https://api.spotify.com/v1/artists/${artist.id}/related-artists`);
+          const rel=await apiFetch(`https://api.spotify.com/v1/artists/${artist.id}/related-artists`, true);
           if(rel?.artists) artistPool=artistPool.concat(rel.artists);
         }
         const seen2=new Set();

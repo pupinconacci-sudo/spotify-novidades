@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<script>
+  // Redirect to index.html passing the OAuth callback params
+  const params = window.location.search;
+  window.location.replace('./index.html' + params);
+</script>
+</body>
+</html>
