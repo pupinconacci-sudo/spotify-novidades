@@ -26,7 +26,8 @@
   .capsule { width:min(440px,100%); background:#212121; border-radius:18px; overflow:hidden; box-shadow:0 20px 60px #000a; }
   .photo { height:300px; background:linear-gradient(135deg,#1DB954,#0d3b1f) center/cover no-repeat; }
   .body { padding:26px 28px 34px; }
-  .brand { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+  .brand { display:flex; justify-content:space-between; align-items:center; gap:12px; font-size:13px; }
+  #date { text-align:right; line-height:1.35; white-space:nowrap; }
   .brand b { display:flex; align-items:center; gap:7px; font-size:15px; }
   .brand svg { width:22px; height:22px; fill:#fff; }
   .capsule h2 { font-size:34px; font-weight:800; line-height:1.08; letter-spacing:-1px; margin:26px 0 22px; }
@@ -102,8 +103,10 @@ async function load(){
     const [a, t] = await Promise.all([api('artists'), api('tracks')]);
     const mes = new Date().toLocaleDateString('pt-BR', { month:'long' });
     $('title').textContent = `Meu Sound Capsule ${label ?? 'de ' + mes[0].toUpperCase() + mes.slice(1)}`;
-    const d = dt => dt.toLocaleDateString('pt-BR', { day:'numeric', month:'short', ...(days > 28 && { year:'numeric' }) }).replace('.', '');
-    $('date').textContent = `${d(new Date(Date.now() - days * 864e5))} a ${d(new Date())}`; // ponytail: Spotify only gives approximate windows
+    // "19 mai –" / "17 nov 2026": year on the end line for long windows, on both when they differ.
+    const from = new Date(Date.now() - days * 864e5), to = new Date(); // ponytail: Spotify only gives approximate windows
+    const d = (dt, year) => dt.toLocaleDateString('pt-BR', { day:'numeric', month:'short', ...(year && { year:'numeric' }) }).replace(/\./g, '').replace(/ de /g, ' ');
+    $('date').innerHTML = `${d(from, from.getFullYear() !== to.getFullYear())} –<br>${d(to, days > 28)}`;
     $('artists').innerHTML = a.items.map((x,i) => `<li>${i+1} ${esc(x.name)}</li>`).join('');
     $('tracks').innerHTML = t.items.map((x,i) => `<li>${i+1} ${esc(x.name)} <span class="by">- ${esc(x.artists.map(y => y.name).join(', '))}</span></li>`).join('');
     const photo = a.items[0]?.images?.[0]?.url;
