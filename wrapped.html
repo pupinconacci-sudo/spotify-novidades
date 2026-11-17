@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spotify · Cápsula Sonora</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root { --green:#1DB954; --black:#0a0a0a; --surface:#111; --surface2:#1a1a1a; --border:rgba(255,255,255,0.07); --text:#f0f0ee; --muted:#888; }
@@ -21,9 +22,9 @@
   .btn { padding:11px 22px; border-radius:100px; font-family:'Figtree',sans-serif; font-size:13px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--text); }
   .btn-green { background:var(--green); color:#000; border-color:var(--green); }
 
-  #wrap { display:none; justify-content:center; }
+  #wrap { display:none; flex-direction:column; align-items:center; gap:18px; }
   .capsule { width:min(440px,100%); background:#212121; border-radius:18px; overflow:hidden; box-shadow:0 20px 60px #000a; }
-  .photo { height:300px; background:linear-gradient(135deg,#1DB954,#0d3b1f) center/cover no-repeat; filter:grayscale(1); }
+  .photo { height:300px; background:linear-gradient(135deg,#1DB954,#0d3b1f) center/cover no-repeat; }
   .body { padding:26px 28px 34px; }
   .brand { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
   .brand b { display:flex; align-items:center; gap:7px; font-size:15px; }
@@ -61,7 +62,7 @@
   </div>
 
   <div id="wrap">
-    <div class="capsule">
+    <div class="capsule" id="capsule">
       <div class="photo" id="photo"></div>
       <div class="body">
         <div class="brand"><b><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 100 24 12 12 0 000-24zm5.5 17.3a.75.75 0 01-1 .25c-2.8-1.7-6.4-2.1-10.6-1.1a.75.75 0 11-.33-1.46c4.6-1.05 8.5-.6 11.7 1.3.36.22.47.68.25 1.01zm1.47-3.27a.94.94 0 01-1.29.31c-3.2-1.97-8.1-2.54-11.9-1.39a.94.94 0 11-.54-1.8c4.3-1.31 9.7-.67 13.4 1.6.44.27.58.85.31 1.28zm.13-3.4C15.3 8.3 8.9 8.1 5.2 9.2a1.12 1.12 0 11-.65-2.15c4.25-1.29 11.3-1.04 15.7 1.6a1.12 1.12 0 01-1.15 1.93z"/></svg>Spotify</b><span id="date"></span></div>
@@ -72,6 +73,7 @@
         </div>
       </div>
     </div>
+    <button class="btn btn-green" id="export" onclick="exportImage()" disabled>Gerando imagem...</button>
   </div>
 </div>
 
@@ -101,7 +103,23 @@ async function load(){
     $('photo').style.backgroundImage = photo ? `url("${esc(photo)}")` : '';
     $('wrap').style.display = 'flex';
     $('wrap').scrollIntoView({ behavior:'smooth' });
+    // Render ahead of the click: iOS only allows share() right after a tap, not after a slow await.
+    $('export').disabled = true; $('export').textContent = 'Gerando imagem...';
+    png = document.fonts.ready
+      .then(() => html2canvas($('capsule'), { scale:3, useCORS:true, backgroundColor:null }))
+      .then(c => new Promise(r => c.toBlob(r, 'image/png')))
+      .then(b => new File([b], 'capsula-sonora.png', { type:'image/png' }));
+    png.then(f => { $('export').disabled = false; $('export').textContent = navigator.canShare?.({ files:[f] }) ? 'Compartilhar (Instagram, WhatsApp...)' : 'Baixar imagem'; })
+       .catch(() => { $('export').textContent = 'Não consegui gerar a imagem'; });
   } catch (s) { $('login').style.display = ''; alert('Erro na API do Spotify (' + s + '). Faça login de novo.'); }
+}
+let png;
+async function exportImage(){
+  const f = await png;
+  if (navigator.canShare?.({ files:[f] })) return navigator.share({ files:[f] }).catch(() => {}); // phone share sheet → Instagram
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(f); a.download = f.name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 $(token() ? 'pick' : 'login').style.display = '';
 </script>
