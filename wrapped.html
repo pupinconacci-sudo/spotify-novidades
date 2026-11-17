@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spotify · Meu Mês</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root { --green:#1DB954; --black:#0a0a0a; --surface:#111; --surface2:#1a1a1a; --border:rgba(255,255,255,0.07); --text:#f0f0ee; --muted:#888; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:'Syne',sans-serif; background:var(--black); color:var(--text); min-height:100vh; }
+  body { font-family:'Figtree',sans-serif; background:var(--black); color:var(--text); min-height:100vh; }
   .container { max-width:900px; margin:0 auto; padding:48px 24px 80px; }
   .mono { font-family:'DM Mono',monospace; }
   .top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:32px; flex-wrap:wrap; }
@@ -18,7 +18,7 @@
   .hint { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); line-height:1.8; }
   .hint a { color:var(--green); }
   .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px; }
-  .btn { padding:11px 22px; border-radius:100px; font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--text); }
+  .btn { padding:11px 22px; border-radius:100px; font-family:'Figtree',sans-serif; font-size:13px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--text); }
   .btn-green { background:var(--green); color:#000; border-color:var(--green); }
 
   #wrap { display:none; justify-content:center; }
@@ -32,6 +32,8 @@
   .lists { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .lists h3 { font-size:16px; font-weight:800; margin-bottom:6px; }
   .lists ol { list-style:none; } .lists li { font-size:15px; line-height:1.55; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #tracks li { white-space:normal; line-height:1.3; padding:2px 0; }
+  .by { font-size:11px; color:#9a9a9a; font-weight:400; }
   @media (max-width:480px) { .capsule h2 { font-size:28px; } .lists li { font-size:13px; } }
 </style>
 </head>
@@ -76,7 +78,7 @@ async function load(){
     const d = dt => dt.toLocaleDateString('pt-BR', { day:'numeric', month:'short' }).replace('.', '');
     $('date').textContent = `${d(new Date(Date.now() - 28 * 864e5))} a ${d(new Date())}`; // ponytail: Spotify only says "~4 weeks"
     $('artists').innerHTML = a.items.map((x,i) => `<li>${i+1} ${esc(x.name)}</li>`).join('');
-    $('tracks').innerHTML = t.items.map((x,i) => `<li title="${esc(x.artists.map(y => y.name).join(', '))}">${i+1} ${esc(x.name)}</li>`).join('');
+    $('tracks').innerHTML = t.items.map((x,i) => `<li>${i+1} ${esc(x.name)} <span class="by">- ${esc(x.artists.map(y => y.name).join(', '))}</span></li>`).join('');
     const photo = a.items[0]?.images?.[0]?.url;
     if (photo) $('photo').style.backgroundImage = `url("${esc(photo)}")`;
     $('wrap').style.display = 'flex';
