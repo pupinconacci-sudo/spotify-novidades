@@ -49,13 +49,18 @@
   </div>
 
   <div class="card" id="pick" style="display:none">
-    <p class="hint">Escolha o período da sua cápsula.</p>
+    <p class="hint">Escolha o período e o tamanho da sua cápsula.</p>
     <div class="row">
       <!-- The API only offers these three windows. -->
       <select id="range">
         <option value="short_term" selected>Últimas 4 semanas</option>
         <option value="medium_term">Últimos 6 meses</option>
         <option value="long_term">Último ano</option>
+      </select>
+      <select id="count">
+        <option value="3">Top 3</option>
+        <option value="5" selected>Top 5</option>
+        <option value="10">Top 10</option>
       </select>
       <button class="btn btn-green" onclick="load()">Gerar cápsula</button>
     </div>
@@ -89,7 +94,7 @@ async function load(){
   const tok = token();
   if (!tok) { $('login').style.display = ''; return; } // login lives on the main page
   const range = $('range').value, [days, label] = RANGES[range];
-  const api = path => fetch(`https://api.spotify.com/v1/me/top/${path}?limit=10&time_range=${range}`, { headers:{ Authorization:'Bearer ' + tok } })
+  const api = path => fetch(`https://api.spotify.com/v1/me/top/${path}?limit=${$('count').value}&time_range=${range}`, { headers:{ Authorization:'Bearer ' + tok } })
     .then(r => r.ok ? r.json() : Promise.reject(r.status));
   try {
     const [a, t] = await Promise.all([api('artists'), api('tracks')]);
