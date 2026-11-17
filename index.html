@@ -638,8 +638,15 @@ let _tt;
 function showToast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='show '+type;clearTimeout(_tt);_tt=setTimeout(()=>el.className='',3000);}
 
 async function init(){
+  // Other pages send users here as ?next=<page> to log in and come back.
+  if(new URLSearchParams(location.search).get('next')==='wrapped.html'){ // allowlist: no open redirect
+    sessionStorage.setItem('return_to','wrapped.html');
+    return login();
+  }
   if(window.location.search.includes('code=')){
     const ok=await handleCallback();
+    const back=sessionStorage.getItem('return_to');
+    if(ok&&back){sessionStorage.removeItem('return_to');location.replace('./'+back);return;}
     if(ok){
       document.getElementById('login-section').style.display='none';
       document.getElementById('app-section').style.display='block';
