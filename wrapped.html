@@ -73,7 +73,8 @@ async function load(){
     const [a, t] = await Promise.all([api('artists'), api('tracks')]);
     const mes = new Date().toLocaleDateString('pt-BR', { month:'long' });
     $('title').textContent = `Meu Sound Capsule de ${mes[0].toUpperCase() + mes.slice(1)}`;
-    $('date').textContent = new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
+    const d = dt => dt.toLocaleDateString('pt-BR', { day:'numeric', month:'short' }).replace('.', '');
+    $('date').textContent = `${d(new Date(Date.now() - 28 * 864e5))} a ${d(new Date())}`; // ponytail: Spotify only says "~4 weeks"
     $('artists').innerHTML = a.items.map((x,i) => `<li>${i+1} ${esc(x.name)}</li>`).join('');
     $('tracks').innerHTML = t.items.map((x,i) => `<li title="${esc(x.artists.map(y => y.name).join(', '))}">${i+1} ${esc(x.name)}</li>`).join('');
     const photo = a.items[0]?.images?.[0]?.url;
