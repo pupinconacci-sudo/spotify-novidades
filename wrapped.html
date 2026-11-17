@@ -32,7 +32,9 @@
   .capsule h2 { font-size:34px; font-weight:800; line-height:1.08; letter-spacing:-1px; margin:26px 0 22px; }
   .lists { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .lists h3 { font-size:16px; font-weight:800; margin-bottom:6px; }
-  .lists ol { list-style:none; } .lists li { font-size:15px; line-height:1.55; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* Grid rows stretch both columns to the taller one; space-between spreads the shorter list to match. */
+  .lists > div { display:flex; flex-direction:column; }
+  .lists ol { list-style:none; flex:1; display:flex; flex-direction:column; justify-content:space-between; } .lists li { font-size:15px; line-height:1.55; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #tracks li { white-space:normal; line-height:1.3; padding:2px 0; }
   .by { font-size:11px; color:#9a9a9a; font-weight:400; }
   select { background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:100px; padding:11px 18px; font-family:inherit; font-size:13px; font-weight:700; }
