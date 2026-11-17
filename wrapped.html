@@ -118,7 +118,11 @@ async function load(){
       .then(b => new File([b], 'capsula-sonora.png', { type:'image/png' }));
     png.then(f => { $('export').disabled = false; $('export').textContent = navigator.canShare?.({ files:[f] }) ? 'Compartilhar (Instagram, WhatsApp...)' : 'Baixar imagem'; })
        .catch(() => { $('export').textContent = 'Não consegui gerar a imagem'; });
-  } catch (s) { $('login').style.display = ''; alert('Erro na API do Spotify (' + s + '). Faça login de novo.'); }
+  } catch (s) {
+    // 403 = account not on the app's allowlist (Spotify Development Mode, max 5 users).
+    if (s === 403) return alert('Sua conta do Spotify ainda não tem acesso a este site. Peça para quem compartilhou o link liberar o e-mail da sua conta Spotify.');
+    $('login').style.display = ''; alert('Erro na API do Spotify (' + s + '). Faça login de novo.');
+  }
 }
 let png;
 async function exportImage(){
